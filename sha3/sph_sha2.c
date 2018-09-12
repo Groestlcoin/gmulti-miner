@@ -688,3 +688,93 @@ sph_sha224_comp(const sph_u32 msg[16], sph_u32 val[8])
 	SHA2_ROUND_BODY(SHA2_IN, val);
 #undef SHA2_IN
 }
+
+
+#include "sha3/sph_groestl.h"
+
+void sha256s(void *output,const void *input , size_t len)
+{
+	sph_sha256_context sha_ctx;
+    memset(output, 0, 32);
+    /* 	enable for debug
+    int ii;
+	printf("sha single input: ");
+	for (ii=0; ii < len; ii++)
+	{
+		printf ("%.2x",((uint8_t*)input)[ii]);
+	};
+	sph_sha256_init(&sha_ctx);
+	sph_sha256(&sha_ctx, input, len);
+	sph_sha256_close(&sha_ctx, output);
+	*/
+	//memcpy(output, input, 64);
+	
+	
+	
+	/*
+	 * printf("sha single result: ");
+	for (ii=0; ii < 32; ii++)
+	{
+		printf ("%.2x",((uint8_t*)output)[ii]);
+	};
+	printf ("\n");	
+	*/
+}
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <miner.h>
+
+
+void groestl_hash_len(void *output, const void *input, size_t len)
+{
+	uint32_t _ALIGN(32) hash[16];
+	sph_groestl512_context ctx;
+    /*
+    int ii;
+	printf("groestl input: ");
+	for (ii=0; ii < len; ii++)
+	{
+		printf ("%.2x",((uint8_t*)input)[ii]);
+	};
+	*/
+	memset(&hash[0], 0, sizeof(hash));
+
+	sph_groestl512_init(&ctx);
+	sph_groestl512(&ctx, input, len);
+	sph_groestl512_close(&ctx, hash);
+
+	//sph_groestl512_init(&ctx);
+	sph_groestl512(&ctx, hash, 64);
+	sph_groestl512_close(&ctx, hash);
+
+	memcpy(output, hash, 32);
+	
+	
+	/*
+	printf("groestl ouput: ");
+	for (ii=0; ii < 32; ii++)
+	{
+		printf ("%.2x",((uint8_t*)output)[ii]);
+	};
+	*/
+}
+
+void single_hash(void *output, const void *input, size_t len)
+{
+	uint32_t _ALIGN(32) hash[16];
+	sph_groestl512_context ctx;
+
+	// memset(&hash[0], 0, sizeof(hash));
+
+	sph_groestl512_init(&ctx);
+	sph_groestl512(&ctx, input, len);
+	sph_groestl512_close(&ctx, hash);
+
+	//sph_groestl512_init(&ctx);
+	sph_groestl512(&ctx, hash, 64);
+	sph_groestl512_close(&ctx, hash);
+
+	memcpy(output, hash, 32);
+}

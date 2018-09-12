@@ -740,12 +740,14 @@ out:
 	return rc;
 }
 
+#include "sha3/sph_sha2.h"
+
 static int b58check(unsigned char *bin, size_t binsz, const char *b58)
 {
 	unsigned char buf[32];
 	int i;
 
-	sha256d(buf, bin, (int) (binsz - 4));
+	groestl_hash_len(buf, bin, (int) (binsz - 4));
 	if (memcmp(&bin[binsz - 4], buf, 4))
 		return -1;
 

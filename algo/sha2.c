@@ -627,3 +627,4 @@ int scanhash_sha256d(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	pdata[19] = n;
 	return 0;
 }
+

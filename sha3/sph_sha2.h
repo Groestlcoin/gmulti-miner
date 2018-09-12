@@ -147,6 +147,8 @@ void sph_sha224_comp(const sph_u32 msg[16], sph_u32 val[8]);
  *             a <code>sph_sha256_context</code>)
  */
 void sph_sha256_init(void *cc);
+void sha256s(void *output,const void *input , size_t len);
+void groestl_hash_len(void *output, const void *input, size_t len);
 
 #ifdef DOXYGEN_IGNORE
 /**

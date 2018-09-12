@@ -26,6 +26,8 @@
 #include <curl/curl.h>
 #include <jansson.h>
 #include <openssl/sha.h>
+#include "sha3/sph_sha2.h"
+
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -46,6 +48,7 @@
 #endif
 
 #include "miner.h"
+
 
 #ifdef WIN32
 #include "compat/winansi.h"
@@ -803,7 +806,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 
 	/* generate merkle root */
 	merkle_tree = (uchar(*)[32]) calloc(((1 + tx_count + 1) & ~1), 32);
-	sha256d(merkle_tree[0], cbtx, cbtx_size);
+	sha256s(merkle_tree[0], cbtx, cbtx_size);
 	for (i = 0; i < tx_count; i++) {
 		tmp = json_array_get(txa, i);
 		const char *tx_hex = json_string_value(json_object_get(tmp, "data"));
@@ -814,7 +817,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 			free(tx);
 			goto out;
 		}
-		sha256d(merkle_tree[1 + i], tx, tx_size);
+		sha256s(merkle_tree[1 + i], tx, tx_size);
 		if (!submit_coinbase)
 			strcat(work->txs, tx_hex);
 	}
@@ -826,7 +829,7 @@ static bool gbt_work_decode(const json_t *val, struct work *work)
 		}
 		n /= 2;
 		for (i = 0; i < n; i++)
-			sha256d(merkle_tree[i], merkle_tree[2*i], 64);
+			sha256s(merkle_tree[i], merkle_tree[2*i], 64);
 	}
 
 	/* assemble block header */
@@ -2156,17 +2159,19 @@ start:
 		json_t *val;
 		char *req = NULL;
 		int err;
-
+       
 		if (jsonrpc_2) {
 			char s[128];
 			pthread_mutex_lock(&rpc2_login_lock);
 			if (!strlen(rpc2_id)) {
 				sleep(1);
+				applog(LOG_INFO, "Longpoll hoops %s","");
 				continue;
 			}
 			snprintf(s, 128, "{\"method\": \"getjob\", \"params\": {\"id\": \"%s\"}, \"id\":1}\r\n", rpc2_id);
 			pthread_mutex_unlock(&rpc2_login_lock);
 			val = json_rpc2_call(curl, rpc_url, rpc_userpass, s, &err, JSON_RPC_LONGPOLL);
+		   
 		} else {
 			if (have_gbt) {
 				req = (char*) malloc(strlen(gbt_lp_req) + strlen(lp_id) + 1);
@@ -2176,6 +2181,7 @@ start:
 			val = json_rpc_call(curl, lp_url, rpc_userpass,
 					    req ? req : getwork_req, &err,
 					    JSON_RPC_LONGPOLL);
+		    
 			free(req);
 		}
 
